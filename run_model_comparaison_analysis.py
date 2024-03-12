@@ -15,6 +15,11 @@ load_dotenv()
 openai_api_key = os.getenv('OPENAI_API_KEY')
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY')
 
+# Check if API keys are set
+if not openai_api_key or not anthropic_api_key:
+    raise ValueError("API keys for OpenAI and Anthropic are not set. Please provide them in the .env file.")
+
+
 # Initialize API clients
 clientOpenAI = OpenAI(api_key=openai_api_key)
 clientAnthropic = Anthropic(api_key=anthropic_api_key)
@@ -32,14 +37,14 @@ Please respond exclusively in JSON format, adhering to the following structure:
 All the fields are mandatory!
 """
 
-def get_questions(n=10):
+def get_questions(dataset_name="microsoft/orca-math-word-problems-200k", question_field="question", n=20):
     # Load the dataset
-    dataset = load_dataset("microsoft/orca-math-word-problems-200k")
+    dataset = load_dataset(dataset_name)
     # Access the training split
     train_data = dataset["train"]
-    # Yield the first n questions
+    # Yield the first n questions from the specified field
     for i in range(n):
-        yield train_data[i]['question']
+        yield train_data[i][question_field]
 
 # Database initialization
 def initialize_db(db_name="db_compare_models.db"):
@@ -54,7 +59,7 @@ def initialize_db(db_name="db_compare_models.db"):
 
 # Insert question and answers into database
 def insert_question_and_answers(question, answer_gpt4, answer_claude3):
-    conn = sqlite3.connect("db_model_compare.db")
+    conn = sqlite3.connect("db_compare_models.db")
     c = conn.cursor()
     # Insert question
     c.execute("INSERT INTO questions (question) VALUES (?)", (question,))
@@ -68,8 +73,6 @@ def insert_question_and_answers(question, answer_gpt4, answer_claude3):
 
 # Insert comparison results into database
 def insert_comparisons(question_id, model_evaluating, preferred_answer, model_bot_a, model_bot_b, score_a, score_b, explanation):
-    
-    
     # Determine scores for GPT-4 and Claude3
     if model_bot_a == "GPT-4" and model_bot_b == "Claude3":
         score_GPT4 = score_a
@@ -82,7 +85,7 @@ def insert_comparisons(question_id, model_evaluating, preferred_answer, model_bo
         print("Error: Model names do not match expected 'GPT-4' or 'Claude3'.")
         return
     
-    conn = sqlite3.connect("db_model_compare.db")
+    conn = sqlite3.connect("db_compare_models.db")
     c = conn.cursor()
     c.execute("INSERT INTO comparisons (question_id, model_evaluating, preferred_answer, model_bot_a, model_bot_b, score_a, score_b, explanation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (question_id, model_evaluating, preferred_answer, model_bot_a, model_bot_b, score_a, score_b, explanation))
     c.execute("INSERT INTO comparison_gpt4_claude3 (question_id, model_evaluating, preferred_answer, model_bot_a, model_bot_b, score_GPT4, score_Claude3, explanation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (question_id, model_evaluating, preferred_answer, model_bot_a, model_bot_b, score_GPT4, score_Claude3, explanation))
@@ -185,7 +188,23 @@ initialize_db()
 
 # Main script
 if __name__ == "__main__":
-    for user_question in get_questions(n=20):  # Loop through the first 10 questions
+    # Prompt user for dataset name, question field name, and number of questions to process
+    dataset_name = input("Enter the dataset name (default: microsoft/orca-math-word-problems-200k): ").strip()
+    if not dataset_name:
+        dataset_name = "microsoft/orca-math-word-problems-200k"
+
+    question_field = input("Enter the name of the question field (default: question): ").strip()
+    if not question_field:
+        question_field = "question"
+
+    num_questions = input("Enter the number of questions to process (default: 20): ").strip()
+    try:
+        num_questions = int(num_questions) if num_questions else 20
+    except ValueError:
+        print("Invalid input for the number of questions. Using default value of 20.")
+        num_questions = 20
+        
+    for user_question in get_questions(dataset_name, question_field, num_questions):
         # Process each question as before
         question_prompts = [
             {"type": "GPT-4", "prompt": user_question},

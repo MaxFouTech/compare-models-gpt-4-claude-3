@@ -4,7 +4,7 @@ import numpy as np
 import sqlite3
 
 # Connect to the database
-conn = sqlite3.connect('db_model_compare.db')
+conn = sqlite3.connect('db_compare_models.db')
 
 # Fetch all rows from the new comparisons table
 query = "SELECT * FROM comparison_gpt4_claude3"

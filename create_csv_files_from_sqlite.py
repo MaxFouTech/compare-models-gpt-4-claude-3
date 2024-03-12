@@ -2,7 +2,7 @@ import sqlite3
 import csv
 
 # The path to the SQLite database file
-db_path = 'db_model_compare.db'
+db_path = 'db_compare_models.db'
 # List of tables to convert to CSV
 tables = ['questions', 'answers', 'comparisons', 'comparison_gpt4_claude3']
 
