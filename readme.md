@@ -1,8 +1,45 @@
-Here's a detailed README file for your GitHub repository:
+# Blind Self-Evaluation: GPT-4-turbo vs. Claude 3 Opus
 
-# Compare Models: GPT-4-turbo and Claude 3 Opus
+This project compares the performance of GPT-4-turbo and Claude 3 Opus by sending questions to both APIs and then asking them to evaluate the quality of both answers without knowing the origin of the answers.
 
-This project compares the performance of GPT-4-turbo and Claude 3 Opus by sending questions to both APIs and then analyzing the quality of their responses without disclosing which model provided which answer. It's a simple way to assess and compare the capabilities of these models.
+This blind assessment approach provides a simple and "unbiased" way to assess and compare the quality of these models.
+
+## Context
+
+This is a side project that was made possible with the help of ChatGPT!
+While it may not be fully optimized, the idea is to test the concept of models self-evaluating themselves.
+It would also be interesting to investigate whether the models could generate an even more comprehensive and accurate response by leveraging insights from the two initial answers during the evaluation process.
+
+## Methodology
+
+1. When the question is sent to get the original model's answer, there is no system message.
+2. However, when we ask the model to compare both answers, we are sending the following system message:
+
+```json
+Please respond exclusively in JSON format, adhering to the following structure:
+{
+ "explanation": "A detailed narrative explaining the reasoning behind the comparison, including a chain of thought process that leads to the final assessment.",
+ "score_a": "A numerical score between 0 and 100 representing the quality of answer A.",
+ "score_b": "A numerical score between 0 and 100 representing the quality of answer B.",
+ "better_answer": "Indicates which answer is superior, 'A' or 'B'. The choice should be supported by the scores and the detailed explanation provided. Only reply with 'A' or 'B' in better_answer."
+}
+All fields are mandatory!
+```
+
+The different steps of the comparison process are as follows:
+
+1. Send the user question to API A (e.g., GPT-4-turbo) and receive its answer.
+2. Send the user question to API B (e.g., Claude 3 Opus) and receive its answer.
+3. Send the user question along with the answers from API A and API B to API A (e.g., GPT-4-turbo) and ask it to evaluate which answer is the best, without disclosing which model provided each answer.
+4. Send the user question along with the answers from API A and API B to API B (e.g., Claude 3 Opus) and ask it to evaluate which answer is the best, without disclosing which model provided each answer.
+5. Repeat steps 3 and 4, but switch the sequence of the API answers (API B first, then API A) to ensure a balanced evaluation.
+
+By having each model evaluate the answers without knowing their origins and by switching the order of the answers, the project aims to obtain a comparison of the models' performance and capabilities that is as objective as possible within the constraints of using the models themselves for evaluation.
+
+## Results overview on 20 questions
+
+![Alt Text](/charts_images/model_scores.png)
+![Alt Text](/charts_images/model_preferences.png)
 
 ## Project Structure
 
