@@ -37,6 +37,14 @@ Please respond exclusively in JSON format, adhering to the following structure:
 All the fields are mandatory!
 """
 
+def is_dataset_name(input_text):
+    # Attempt to load the dataset with the provided name
+    try:
+        load_dataset(input_text, split='train[1:1]')
+        return True
+    except:
+        return False
+
 def get_questions(dataset_name="microsoft/orca-math-word-problems-200k", question_field="question", n=20):
     # Load the dataset
     dataset = load_dataset(dataset_name)
@@ -188,23 +196,29 @@ initialize_db()
 
 # Main script
 if __name__ == "__main__":
-    # Prompt user for dataset name, question field name, and number of questions to process
-    dataset_name = input("Enter the dataset name (default: microsoft/orca-math-word-problems-200k): ").strip()
-    if not dataset_name:
-        dataset_name = "microsoft/orca-math-word-problems-200k"
+    user_input = input("Enter a dataset name (for example microsoft/orca-math-word-problems-200k) or type your question directly: ").strip()
+    if is_dataset_name(user_input):
+        # Prompt user for dataset name, question field name, and number of questions to process
+        dataset_name = user_input
+        if not dataset_name:
+            dataset_name = "microsoft/orca-math-word-problems-200k"
 
-    question_field = input("Enter the name of the question field (default: question): ").strip()
-    if not question_field:
-        question_field = "question"
+        question_field = input("Enter the name of the question field (default: question): ").strip()
+        if not question_field:
+            question_field = "question"
 
-    num_questions = input("Enter the number of questions to process (default: 20): ").strip()
-    try:
-        num_questions = int(num_questions) if num_questions else 20
-    except ValueError:
-        print("Invalid input for the number of questions. Using default value of 20.")
-        num_questions = 20
-        
-    for user_question in get_questions(dataset_name, question_field, num_questions):
+        num_questions = input("Enter the number of questions to process (default: 20): ").strip()
+        try:
+            num_questions = int(num_questions) if num_questions else 20
+        except ValueError:
+            print("Invalid input for the number of questions. Using default value of 20.")
+            num_questions = 20
+        questions = get_questions(dataset_name, question_field, num_questions)
+    else:
+        # User provided a direct question
+        questions = [user_input]
+            
+    for user_question in questions:
         # Process each question as before
         question_prompts = [
             {"type": "GPT-4", "prompt": user_question},
